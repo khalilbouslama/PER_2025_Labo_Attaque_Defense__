@@ -1,11 +1,62 @@
-version: "3.8"
+version: "3.9"
 
 services:
-  kali:
-    image: kalilinux/kali-rolling
-    # ... (vos autres configs kali) ...
 
+  # ----------- DVWA (Serveur Web Vulnérable) -----------
   dvwa:
     image: vulnerables/web-dvwa
+    container_name: dvwa
     ports:
-      - "80:80"
+      - "8080:80"
+    restart: always
+
+  # ----------- Kali Linux (Machine d’attaque) -----------
+  kali:
+    image: kalilinux/kali-rolling
+    container_name: kali
+    tty: true
+    stdin_open: true
+    command: /bin/bash
+    networks:
+      - labnet
+
+  # ----------- Wazuh Manager -----------
+  wazuh.manager:
+    image: wazuh/wazuh-manager:4.7.1
+    container_name: wazuh_manager
+    hostname: wazuh-manager
+    restart: always
+    ports:
+      - "1515:1515"    # agents
+      - "55000:55000"  # API
+    networks:
+      - labnet
+
+  # ----------- Wazuh Indexer (Elastic-like backend) -----------
+  wazuh.indexer:
+    image: wazuh/wazuh-indexer:4.7.1
+    container_name: wazuh_indexer
+    environment:
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - labnet
+
+  # ----------- Wazuh Dashboard -----------
+  wazuh.dashboard:
+    image: wazuh/wazuh-dashboard:4.7.1
+    container_name: wazuh_dashboard
+    depends_on:
+      - wazuh.manager
+      - wazuh.indexer
+    ports:
+      - "5601:5601"
+    networks:
+      - labnet
+
+networks:
+  labnet:
+    driver: bridge
