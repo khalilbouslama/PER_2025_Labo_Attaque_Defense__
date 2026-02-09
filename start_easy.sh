@@ -5,14 +5,14 @@
 # ============================================================
 
 echo "🔵 [1/3] Démarrage du Commissariat (Wazuh Blue Team)..."
-cd ~/Bureau/PER/wazuh-docker/single-node
+cd ~/Desktop/PER_2025_Labo_Attaque_Defense__/wazuh-docker/single-node
 sudo docker-compose up -d
 # On attend un peu que la base de données s'allume
 echo "   ⏳ Attente de 30 secondes pour le démarrage de Wazuh..."
 sleep 30
 
 echo "🔴 [2/3] Démarrage de la Scène de Crime (Architecture Easy)..."
-cd ~/Bureau/PER/architectures/easy
+cd ~/Desktop/PER_2025_Labo_Attaque_Defense__/architectures/easy
 sudo docker-compose up -d
 
 echo "🔄 [3/3] Réveil forcé des agents (Connexion au 172.17.0.1)..."

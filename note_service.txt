@@ -1,0 +1,1 @@
+Note pour l'admin : Le compte 'sambauser' est prêt. Login SSH activé.
