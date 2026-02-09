@@ -19,6 +19,9 @@ RUN mkdir -p /etc/apt/keyrings && \
     echo "deb [signed-by=/etc/apt/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee /etc/apt/sources.list.d/wazuh.list && \
     apt-get update && apt-get install -y wazuh-agent
 
+# CRÉATION DU USER VULNÉRABLE (admin / jenkins123)
+COPY security.groovy /usr/share/jenkins/ref/init.groovy.d/security.groovy
+
 # 3. Faille "Jenkins Script Console" (Sécurité désactivée)
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
 

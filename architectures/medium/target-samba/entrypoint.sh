@@ -9,6 +9,9 @@ fi
 # Démarrage de l'agent Wazuh
 service wazuh-agent start
 
+# Démarrage de SSH (pour que l'étudiant se connecte une fois la clé uploadée)
+service ssh start
+
 # Démarrage de Samba
 service smbd start
 
