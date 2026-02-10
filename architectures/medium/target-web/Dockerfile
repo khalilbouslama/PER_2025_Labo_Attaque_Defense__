@@ -15,10 +15,11 @@ RUN apt-get update && apt-get install -y \
 RUN curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | apt-key add - && \
     echo "deb https://packages.wazuh.com/4.x/apt/ stable main" | tee /etc/apt/sources.list.d/wazuh.list
 
-# 3. Installation de l'agent Wazuh
+# 3. Installation de l'agent Wazuh (VERSION 4.9.0 pour matcher le manager)
 RUN apt-get update && apt-get install -y \
-    wazuh-agent \
+    wazuh-agent=4.9.0-1 \
     && rm -rf /var/lib/apt/lists/*
+
 
 # 4. Configuration de la faille LD_PRELOAD
 RUN echo "www-data ALL=(root) NOPASSWD: /usr/bin/gzip" >> /etc/sudoers
@@ -50,6 +51,14 @@ RUN echo "FLAG{MEDIUM_WEB_LD_PRELOAD_ROOT}" > /root/root_flag.txt && chmod 600 /
 # 10. Script de démarrage
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+# Fix Apache logs pour Wazuh (créer vrais fichiers au lieu de stdout)
+RUN rm /var/log/apache2/access.log /var/log/apache2/error.log && \
+    touch /var/log/apache2/access.log /var/log/apache2/error.log && \
+    chown www-data:www-data /var/log/apache2/*.log
+
+# 11. Bash logging SANS rsyslog (trap DEBUG - log AVANT exécution)
+RUN touch /var/log/commands.log && chmod 666 /var/log/commands.log
+RUN echo 'trap '\''echo "$(date "+%b %d %H:%M:%S") BASH_CMD:$(whoami):$(pwd):$(HISTTIMEFORMAT= history 1 | sed "s/^[ ]*[0-9]\+[ ]*//")" >> /var/log/commands.log'\'' DEBUG' >> /etc/bash.bashrc
 
 EXPOSE 80 22
 ENTRYPOINT ["/entrypoint.sh"]
