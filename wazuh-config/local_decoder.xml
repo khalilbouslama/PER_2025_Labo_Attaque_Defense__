@@ -1,0 +1,6 @@
+
+<decoder name="bash_cmd">
+  <prematch>BASH_CMD:</prematch>
+  <regex>BASH_CMD:(\S+):(\S+):(\.+)</regex>
+  <order>user,url,extra_data</order>
+</decoder>
