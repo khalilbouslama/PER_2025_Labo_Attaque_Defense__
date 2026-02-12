@@ -8,6 +8,9 @@ RUN apt-get update && apt-get install -y \
     netcat-traditional \
     sudo \
     python3 \
+    curl \
+    gnupg \
+    apt-transport-https \
     && rm -rf /var/lib/apt/lists/*
 
 # 1.5. Installation de l'agent Wazuh

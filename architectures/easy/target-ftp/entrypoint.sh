@@ -1,17 +1,15 @@
 #!/bin/bash
-
-# 1. Démarrage de l'agent Wazuh
+echo "--> Démarrage de rsyslog..."
+rm -f /run/rsyslogd.pid /dev/log
+/usr/sbin/rsyslogd
+sleep 1
 echo "--> Démarrage de Wazuh Agent..."
 service wazuh-agent start
-
-# 2. Démarrage de SSH (C'est ça qu'il manquait !)
 echo "--> Démarrage du serveur SSH..."
 service ssh start
-
-# 3. Démarrage du serveur FTP (vsftpd)
 echo "--> Démarrage du serveur FTP..."
-service vsftpd start
-
-# 4. Maintien du conteneur en vie (et affichage des logs pour le debug)
+touch /var/log/vsftpd.log
+/usr/sbin/vsftpd &
+sleep 1
 echo "--> Conteneur prêt. Logs :"
 tail -f /var/log/vsftpd.log

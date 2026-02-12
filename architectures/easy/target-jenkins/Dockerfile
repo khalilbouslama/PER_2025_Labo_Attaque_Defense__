@@ -7,7 +7,7 @@ USER root
 # 2. Installation des outils de base
 RUN apt-get update && apt-get install -y \
     curl gnupg apt-transport-https lsb-release \
-    iputils-ping sudo vim  \
+    iputils-ping sudo vim rsyslog  \
     && rm -rf /var/lib/apt/lists/*
 
 # 3. Installation de l'Agent Wazuh
@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y \
 RUN curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --no-default-keyring --keyring gnupg-ring:/usr/share/keyrings/wazuh.gpg --import && chmod 644 /usr/share/keyrings/wazuh.gpg
 RUN echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee -a /etc/apt/sources.list.d/wazuh.list
 RUN apt-get update && WAZUH_MANAGER="wazuh.manager" WAZUH_AGENT_VERSION="4.9.0-1" apt-get install -y wazuh-agent=4.9.0-1
+# Format traditionnel rsyslog
+RUN echo '$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat' > /etc/rsyslog.d/traditional.conf
 
 # 4. Configuration de la faille (Pas besoin de fichier spécifique)
 # Jenkins est vulnérable "par design" via sa console de script si on n'a pas de mot de passe.

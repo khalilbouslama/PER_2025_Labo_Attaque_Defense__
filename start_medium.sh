@@ -5,17 +5,17 @@
 # ============================================================
 
 echo "🧹 [0/3] Arrêt des conflits potentiels (Easy)..."
-cd ~/Bureau/PER/architectures/easy
+cd /home/kali/Desktop/PER_2025_Labo_Attaque_Defense__/architectures/medium
 sudo docker-compose down 2>/dev/null
 
 echo "🔵 [1/3] Démarrage du Commissariat (Wazuh Blue Team)..."
-cd ~/Bureau/PER/wazuh-docker/single-node
+cd /home/kali/Desktop/PER_2025_Labo_Attaque_Defense__/architectures/medium
 sudo docker-compose up -d
 echo "   ⏳ Attente de 30 secondes pour Wazuh..."
 sleep 30
 
 echo "🟠 [2/3] Démarrage du Labo MEDIUM..."
-cd ~/Bureau/PER/architectures/medium
+cd /home/kali/Desktop/PER_2025_Labo_Attaque_Defense__/architectures/easy
 sudo docker-compose up -d --build
 
 echo "🔄 [3/3] Réveil des agents..."

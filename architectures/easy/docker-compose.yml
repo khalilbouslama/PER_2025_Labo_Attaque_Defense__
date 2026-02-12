@@ -21,7 +21,7 @@ services:
   target.ftp:
     build: ./target-ftp       # Le dossier est juste à côté maintenant
     container_name: target_ftp_easy
-    hostname: target-ftp
+    hostname: target-ftp-easy
     environment:
       - WAZUH_MANAGER_IP=172.17.0.1  # IP de ton Windows (Wifi)
     networks:
@@ -30,7 +30,7 @@ services:
   target.jenkins:
     build: ./target-jenkins
     container_name: target_jenkins_easy
-    hostname: target-jenkins
+    hostname: target-jenkins-easy
     user: root
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
@@ -43,7 +43,7 @@ services:
   target.samba:
     build: ./target-samba
     container_name: target_samba_easy
-    hostname: target-samba
+    hostname: target-samba-easy
     environment:
       - WAZUH_MANAGER_IP=172.17.0.1
     networks:
@@ -52,7 +52,7 @@ services:
   target.apache:
     build: ./target-apache
     container_name: target_apache_easy
-    hostname: target-apache
+    hostname: target-apache-easy
     environment:
       - WAZUH_MANAGER_IP=172.17.0.1
     networks:

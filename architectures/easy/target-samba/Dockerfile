@@ -16,6 +16,12 @@ RUN apt-get update && WAZUH_MANAGER="wazuh.manager" WAZUH_AGENT_VERSION="4.9.0-1
 # 3. Configuration SSH
 RUN mkdir /var/run/sshd
 RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+# Activer les logs SSH vers syslog
+RUN sed -i 's/#SyslogFacility AUTH/SyslogFacility AUTH/' /etc/ssh/sshd_config && \
+    sed -i 's/#LogLevel INFO/LogLevel INFO/' /etc/ssh/sshd_config
+
+# Format traditionnel rsyslog (compatible Wazuh)
+RUN echo '$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat' > /etc/rsyslog.d/traditional.conf
 
 # 4. Configuration de l'Attaque
 # A. Création de l'utilisateur cible 'sambauser'
@@ -67,6 +73,9 @@ RUN sed -i '/<\/ossec_config>/i \
   </localfile>' /var/ossec/etc/ossec.conf
 
 # 7. Démarrage
+# Fix rsyslog : format traditionnel pour Wazuh
+COPY 50-default.conf /etc/rsyslog.d/50-default.conf
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 EXPOSE 22 139 445

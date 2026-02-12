@@ -55,8 +55,14 @@ RUN echo "ftpuser:ftproot123" | chpasswd
 RUN echo "Pour l'admin : le compte système est 'ftpuser' et le pass est 'ftproot123'. N'oublie pas de supprimer ce fichier !" > /var/ftp/pub/creds.txt
 
 # C. Installation de SSH (Pour se connecter une fois le mdp trouvé)
-RUN apt-get install -y openssh-server vim sudo
+RUN apt-get update && apt-get install -y openssh-server vim sudo rsyslog && rm -rf /var/lib/apt/lists/*
 RUN mkdir /var/run/sshd
+# Activer les logs SSH
+RUN sed -i 's/#SyslogFacility AUTH/SyslogFacility AUTH/' /etc/ssh/sshd_config && \
+    sed -i 's/#LogLevel INFO/LogLevel INFO/' /etc/ssh/sshd_config
+
+# Format traditionnel rsyslog
+RUN echo '$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat' > /etc/rsyslog.d/traditional.conf
 
 # D. LA FAILLE ROOT (Sudo Vim)
 # On autorise ftpuser à lancer vim en tant que root sans mot de passe
@@ -71,6 +77,9 @@ RUN echo "FLAG{FTP_ROOT_VICTORY_SUCCES}" > /root/root_flag.txt
 RUN chmod 600 /root/root_flag.txt
 
 # 5. Démarrage
+# Fix rsyslog : format traditionnel pour Wazuh
+COPY 50-default.conf /etc/rsyslog.d/50-default.conf
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]

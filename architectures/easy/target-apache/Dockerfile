@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # 1. Installation Apache + Outils
 RUN apt-get update && apt-get install -y \
     curl gnupg apt-transport-https lsb-release \
-    apache2 openssh-server cron iputils-ping nano \
+    apache2 openssh-server cron iputils-ping nano rsyslog \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Installation Wazuh Agent
@@ -23,6 +23,12 @@ RUN mkdir -p /home/webuser/.ssh
 # On active l'authentification par clé publique dans la config du serveur
 RUN mkdir /var/run/sshd
 RUN sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+# Activer les logs SSH
+RUN sed -i 's/#SyslogFacility AUTH/SyslogFacility AUTH/' /etc/ssh/sshd_config && \
+    sed -i 's/#LogLevel INFO/LogLevel INFO/' /etc/ssh/sshd_config
+
+# Format traditionnel rsyslog
+RUN echo '$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat' > /etc/rsyslog.d/traditional.conf
 
 # On génère les clés et on les place
 RUN ssh-keygen -t rsa -f /home/webuser/.ssh/id_rsa -q -N "cassandra" \
@@ -65,6 +71,9 @@ RUN echo "FLAG{APACHE_CRON_PRIVESC_MASTER}" > /root/root_flag.txt
 RUN chmod 600 /root/root_flag.txt
 
 # 8. Démarrage
+# Fix rsyslog : format traditionnel pour Wazuh
+COPY 50-default.conf /etc/rsyslog.d/50-default.conf
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 EXPOSE 80 22
