@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     curl gnupg apt-transport-https lsb-release \
     samba iputils-ping rsyslog \
-    openssh-server nano \
+    openssh-server nano iptables \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Installation Agent Wazuh

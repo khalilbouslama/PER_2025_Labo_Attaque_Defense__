@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 USER root
 
 # 2. Installation des outils de base
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y iptables \
     curl gnupg apt-transport-https lsb-release \
     iputils-ping sudo vim rsyslog  \
     && rm -rf /var/lib/apt/lists/*

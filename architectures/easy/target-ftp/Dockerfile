@@ -55,7 +55,7 @@ RUN echo "ftpuser:ftproot123" | chpasswd
 RUN echo "Pour l'admin : le compte système est 'ftpuser' et le pass est 'ftproot123'. N'oublie pas de supprimer ce fichier !" > /var/ftp/pub/creds.txt
 
 # C. Installation de SSH (Pour se connecter une fois le mdp trouvé)
-RUN apt-get update && apt-get install -y openssh-server vim sudo rsyslog && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y openssh-server vim sudo rsyslog iptables && rm -rf /var/lib/apt/lists/*
 RUN mkdir /var/run/sshd
 # Activer les logs SSH
 RUN sed -i 's/#SyslogFacility AUTH/SyslogFacility AUTH/' /etc/ssh/sshd_config && \

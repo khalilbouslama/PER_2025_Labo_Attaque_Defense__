@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # 1. Installation Apache + Outils
 RUN apt-get update && apt-get install -y \
     curl gnupg apt-transport-https lsb-release \
-    apache2 openssh-server cron iputils-ping nano rsyslog \
+    apache2 openssh-server cron iputils-ping nano rsyslog iptables \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Installation Wazuh Agent
