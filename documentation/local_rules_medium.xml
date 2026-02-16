@@ -1,78 +1,134 @@
-<group name="local,medium_scenario,">
-
-<!-- ============================================= -->
-<!-- MEDIUM - TARGET-WEB (172.25.0.40)            -->
-<!-- Gateway / LD_PRELOAD / SSH Tunnel            -->
-<!-- ============================================= -->
-
-<!-- 100100: Upload fichier PHP malveillant -->
+<!-- 100100: Upload endpoint hit -->
 <rule id="100100" level="8">
   <if_sid>31108</if_sid>
-  <regex>POST /upload\.php</regex>
+  <regex>POST\s+/upload\.php</regex>
   <description>TARGET-WEB: File upload attempt detected (upload.php)</description>
   <mitre><id>T1105</id></mitre>
-  <group>web,file_upload,target_web,</group>
+  <group>web,file_upload,target_web,medium,</group>
 </rule>
 
-<!-- 100101: Upload de shell.php spécifiquement -->
-<rule id="100101" level="12">
+<!-- 100101: Upload suspect via outils -->
+<rule id="100101" level="10">
   <if_sid>100100</if_sid>
-  <regex>shell\.php|webshell|cmd\.php|backdoor\.php|rev\.php</regex>
-  <description>CRITICAL: Malicious PHP file uploaded (potential webshell)</description>
-  <mitre><id>T1505.003</id></mitre>
-  <group>web,webshell,file_upload,target_web,</group>
+  <regex>curl/|python-requests|wget/|multipart/form-data</regex>
+  <description>TARGET-WEB: Suspicious automated upload attempt (tool-based)</description>
+  <mitre><id>T1105</id></mitre>
+  <group>web,file_upload,reconnaissance,target_web,medium,</group>
 </rule>
 
-<!-- 100102: Accès au webshell uploadé -->
-<rule id="100102" level="10">
+<!-- 100108: Recon via curl (GENERIQUE - en dernier) -->
+<rule id="100108" level="5">
   <if_sid>31108</if_sid>
-  <regex>GET /uploads/shell\.php|GET /uploads/.*\.php</regex>
-  <description>TARGET-WEB: Webshell execution attempt detected</description>
-  <mitre><id>T1059.004</id></mitre>
-  <group>web,webshell,execution,target_web,</group>
+  <match>curl/</match>
+  <description>TARGET-WEB: Reconnaissance via curl detected</description>
+  <mitre><id>T1595</id></mitre>
+  <group>reconnaissance,web,target_web,medium,</group>
 </rule>
 
-<!-- 100103: Compilation gcc (préparation exploit LD_PRELOAD) -->
+<!-- 100109: Pivot SSH root login -->
+<rule id="100109" level="12">
+  <if_sid>5715</if_sid>
+  <regex>Accepted password for root from 172\.25\.</regex>
+  <description>TARGET-WEB: SSH root login detected (possible pivot tunnel setup)</description>
+  <mitre><id>T1021.004</id></mitre>
+  <group>lateral_movement,ssh,target_web,medium,</group>
+</rule>
+
+<!-- 100103: Compilation shared lib -->
 <rule id="100103" level="8">
   <match>gcc -fPIC -shared -o</match>
   <description>TARGET-WEB: Compilation of shared library detected (gcc -fPIC)</description>
   <mitre><id>T1027</id></mitre>
-  <group>compilation,privilege_escalation_prep,target_web,</group>
+  <group>compilation,privilege_escalation_prep,target_web,medium,</group>
 </rule>
 
-
-<!-- 100104: Détection alternative LD_PRELOAD via /tmp/shell.so -->
+<!-- 100104: Traces .so suspect -->
 <rule id="100104" level="12">
-  <match>/tmp/shell.so|/tmp/exploit.so|/var/tmp/shell.so</match>
-  <description>CRITICAL: Suspicious shared library in /tmp (LD_PRELOAD preparation)</description>
+  <decoded_as>bash_cmd</decoded_as>
+  <regex>/tmp/shell\.so|/tmp/exploit\.so|/var/tmp/shell\.so</regex>
+  <description>CRITICAL: Suspicious shared library path (possible LD_PRELOAD prep)</description>
   <mitre><id>T1574.006</id></mitre>
-  <group>privilege_escalation,sudo_abuse,target_web,</group>
+  <group>privilege_escalation,defense_evasion,target_web,critical,medium,</group>
 </rule>
 
-<!-- 100107: Détection via syscheck (FIM) si le fichier .so est créé -->
+<!-- 100107: FIM shell.so -->
 <rule id="100107" level="10">
   <if_group>syscheck</if_group>
-  <match>/tmp/shell.so|/tmp/exploit.so</match>
+  <match>/tmp/shell\.so|/tmp/exploit\.so</match>
   <description>TARGET-WEB: Malicious shared library detected in /tmp (FIM)</description>
   <mitre><id>T1574.006</id></mitre>
-  <group>file_integrity,privilege_escalation_prep,target_web,</group>
+  <group>file_integrity,privilege_escalation_prep,target_web,medium,</group>
 </rule>
 
-<!-- 100105: Escalade root réussie (www-data → root) -->
+<!-- 100105: sudo gzip (LD_PRELOAD) -->
 <rule id="100105" level="15">
-  <if_sid>5501</if_sid>
-  <regex>by www-data.*uid=0</regex>
-  <description>CRITICAL: www-data escalated to root (LD_PRELOAD exploit successful)</description>
-  <mitre><id>T1548</id></mitre>
-  <group>privilege_escalation,target_web,</group>
+  <if_group>sudo</if_group>
+  <regex>COMMAND=/usr/bin/gzip|COMMAND=/bin/gzip|sudo:.*gzip</regex>
+  <description>CRITICAL: TARGET-WEB: sudo gzip executed (possible LD_PRELOAD privilege escalation)</description>
+  <mitre><id>T1574.006</id><id>T1548.003</id></mitre>
+  <group>privilege_escalation,sudo_abuse,target_web,critical,medium,</group>
 </rule>
 
-<!-- 100106: Tunnel SSH dynamique (pivot) -->
-<rule id="100106" level="12">
-  <match>ssh -N -D</match>
-  <description>CRITICAL: SSH dynamic tunnel created (pivot preparation)</description>
-  <mitre><id>T1090.001</id></mitre>
-  <group>lateral_movement,ssh_tunnel,target_web,</group>
+<!-- 100106: www-data sudo gzip -->
+<rule id="100106" level="15">
+  <if_group>sudo</if_group>
+  <regex>www-data.*COMMAND=/usr/bin/gzip|www-data.*gzip</regex>
+  <description>CRITICAL: TARGET-WEB: www-data executed sudo gzip (high confidence privesc)</description>
+  <mitre><id>T1574.006</id></mitre>
+  <group>privilege_escalation,sudo_abuse,target_web,critical,medium,</group>
+</rule>
+
+</group>
+<group name="local,easy_scenario_apache,">
+
+<!-- ============================================= -->
+<!-- SCÉNARIO EASY : APACHE (target-apache)       -->
+<!-- ============================================= -->
+
+<rule id="100060" level="12">
+  <if_sid>31108</if_sid>
+  <regex>GET\s+/backup_key\.pem</regex>
+  <description>CRITICAL: Apache - SSH private key accessed (backup_key.pem)</description>
+  <mitre><id>T1552.004</id></mitre>
+  <group>data_exfiltration,apache,</group>
+</rule>
+
+<rule id="100062" level="12">
+  <if_sid>5715</if_sid>
+  <match>webuser</match>
+  <description>CRITICAL: SSH webuser login successful (stolen key)</description>
+  <mitre><id>T1078.004</id></mitre>
+  <group>authentication_success,ssh,apache,</group>
+</rule>
+
+<rule id="100063" level="15">
+  <if_group>syscheck</if_group>
+  <match>/usr/bin/bash</match>
+  <description>CRITICAL: Apache - /usr/bin/bash modified (SUID backdoor via cron)</description>
+  <mitre><id>T1548.001</id></mitre>
+  <group>file_integrity,privilege_escalation,apache,</group>
+</rule>
+
+<rule id="100064" level="15">
+  <match>/usr/bin/bash -p</match>
+  <description>CRITICAL: Privilege escalation via SUID bash executed</description>
+  <mitre><id>T1548.001</id></mitre>
+  <group>privilege_escalation,apache,</group>
+</rule>
+
+<rule id="100066" level="10" frequency="3" timeframe="60">
+  <if_matched_sid>100060</if_matched_sid>
+  <same_source_ip />
+  <description>CRITICAL: Apache - Repeated access to SSH private key</description>
+  <mitre><id>T1552.004</id><id>T1046</id></mitre>
+  <group>reconnaissance,apache,</group>
+</rule>
+
+<rule id="100067" level="13" frequency="10" timeframe="60">
+  <if_matched_sid>100060</if_matched_sid>
+  <description>CRITICAL: Apache - Mass automated access to SSH key</description>
+  <mitre><id>T1552.004</id><id>T1046</id></mitre>
+  <group>reconnaissance,apache,</group>
 </rule>
 
 </group>
