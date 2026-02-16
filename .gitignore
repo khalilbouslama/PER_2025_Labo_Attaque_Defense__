@@ -11,3 +11,5 @@ filebeat_var/
 # Ignorer les fichiers systèmes
 .DS_Store
 Thumbs.db
+*.restore
+hydra.restore
