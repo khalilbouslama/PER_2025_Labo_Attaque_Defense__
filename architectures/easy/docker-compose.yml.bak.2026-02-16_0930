@@ -1,88 +1,66 @@
+version: '3.7'
+
 services:
   # =================================================================
-  # RED TEAM (L'ATTAQUANT - KALI)
+  # RED TEAM (L'ATTAQUANT - ACCESSIBLE VIA SSH)
   # =================================================================
   kali.attacker:
-    build: ../kali-custom
+    build: ../kali-custom     # <--- On construit notre image custom
     container_name: kali_easy
     hostname: kali
     tty: true
     stdin_open: true
     privileged: true
     ports:
-      - "2222:22"
+      - "2222:22"             # <--- PORT MAGIC : On entre par 2222, on arrive sur 22
     networks:
-      net_public_easy:
-        ipv4_address: 172.30.0.10
-
+      - net_easy
   # =================================================================
-  # ZONE PUBLIQUE (VISIBLES DEPUIS KALI)
+  # VICTIMES (Easy)
   # =================================================================
   target.ftp:
-    build: ./target-ftp
+    build: ./target-ftp       # Le dossier est juste à côté maintenant
     container_name: target_ftp_easy
-    hostname: target-ftp
-    privileged: true
+    hostname: target-ftp-easy
     environment:
-      - WAZUH_MANAGER_IP=172.17.0.1
+      - WAZUH_MANAGER_IP=172.17.0.1  # IP de ton Windows (Wifi)
     networks:
-      net_public_easy:
-        ipv4_address: 172.30.0.20
+      - net_easy
 
   target.jenkins:
     build: ./target-jenkins
     container_name: target_jenkins_easy
-    hostname: target-jenkins
-    privileged: true
+    hostname: target-jenkins-easy
     user: root
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
       - WAZUH_MANAGER_IP=172.17.0.1
     ports:
-      - "8082:8080"
+      - "8081:8080"
     networks:
-      net_public_easy:
-        ipv4_address: 172.30.0.30
+      - net_easy
 
-  # LE PIVOT : Connecté aux deux réseaux pour permettre le tunnel SSH
   target.samba:
     build: ./target-samba
     container_name: target_samba_easy
-    hostname: target-samba
-    privileged: true
+    hostname: target-samba-easy
     environment:
       - WAZUH_MANAGER_IP=172.17.0.1
     networks:
-      net_public_easy:
-        ipv4_address: 172.30.0.40
-      net_private_easy:
-        ipv4_address: 172.31.0.10
-# =================================================================
-  # ZONE PRIVÉE (CACHÉE - ACCÈS VIA PIVOT SAMBA)
-  # =================================================================
+      - net_easy
+
   target.apache:
     build: ./target-apache
     container_name: target_apache_easy
-    hostname: target-apache
-    privileged: true
+    hostname: target-apache-easy
     environment:
       - WAZUH_MANAGER_IP=172.17.0.1
     networks:
-      net_private_easy:
-        ipv4_address: 172.31.0.30
+      - net_easy
 
 # =================================================================
-# DÉFINITION DES RÉSEAUX (SEGMENTATION)
+# RÉSEAU LOCAL (Juste pour ce labo)
 # =================================================================
 networks:
-  net_public_easy:
+  net_easy:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.30.0.0/24
-
-  net_private_easy:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.31.0.0/24
