@@ -54,20 +54,7 @@
 
 
 <!-- SSH: Brute force -->
-
-  <rule id="100038" level="5">
-    <if_sid>5710</if_sid>
-    <description>SSH: Failed authentication attempt (non-existent user)</description>
-    <mitre><id>T1110.001</id></mitre>
-    <options>no_log</options>
-  </rule>
-
-  <rule id="100037" level="12" frequency="5" timeframe="120">
-    <if_matched_sid>100038</if_matched_sid>
-    <same_source_ip />
-    <description>SSH: Brute force attack detected (5+ attempts)</description>
-    <mitre><id>T1110.001</id></mitre>
-  </rule>
+<!-- AR configuree sur regle native 5763 (8 tentatives / 120s) -->
 
   <rule id="100036" level="12">
     <if_sid>5715</if_sid>
