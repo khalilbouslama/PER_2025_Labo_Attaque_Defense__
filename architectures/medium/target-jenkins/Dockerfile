@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /etc/apt/keyrings && \
     curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --dearmor -o /etc/apt/keyrings/wazuh.gpg && \
     echo "deb [signed-by=/etc/apt/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" | tee /etc/apt/sources.list.d/wazuh.list && \
-    apt-get update && apt-get install -y wazuh-agent
+    apt-get update && apt-get install -y wazuh-agent=4.9.0-1
 
 # CRÉATION DU USER VULNÉRABLE (admin / jenkins123)
 COPY security.groovy /usr/share/jenkins/ref/init.groovy.d/security.groovy
