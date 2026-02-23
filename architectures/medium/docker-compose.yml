@@ -25,7 +25,7 @@ services:
   target_web:
     build: ./target-web
     container_name: target_web_medium
-    hostname: target-web
+    hostname: target-web-medium
     privileged: true
     restart: always
     networks:
@@ -42,7 +42,7 @@ services:
   target_ftp:
     build: ./target-ftp
     container_name: target_ftp_medium
-    hostname: target-ftp
+    hostname: target-ftp-medium
     privileged: true
     restart: always
     networks:
@@ -54,7 +54,7 @@ services:
   target_samba:
     build: ./target-samba
     container_name: target_samba_medium
-    hostname: target-samba
+    hostname: target-samba-medium
     privileged: true
     restart: always
     networks:
@@ -66,7 +66,7 @@ services:
   target_jenkins:
     build: ./target-jenkins
     container_name: target_jenkins_medium
-    hostname: target-jenkins
+    hostname: target-jenkins-medium
     privileged: true
     restart: always
     networks:
