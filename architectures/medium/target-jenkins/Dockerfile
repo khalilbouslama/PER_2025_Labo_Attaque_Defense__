@@ -40,15 +40,17 @@ RUN chmod 600 /root/root_flag.txt
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# === C'EST ICI QU'ON DEVIENT L'UTILISATEUR LIMITÉ (TOUT À LA FIN) ===
-USER jenkins
 
-EXPOSE 8080 50000
-
-ENTRYPOINT ["/entrypoint.sh"]
 # Bash logging
 RUN touch /var/log/commands.log && chmod 666 /var/log/commands.log && \
     mkdir -p /etc/bash.bashrc.d
 COPY commands.sh /etc/bash.bashrc.d/commands.sh
 RUN chmod +x /etc/bash.bashrc.d/commands.sh && \
     echo "source /etc/bash.bashrc.d/commands.sh" >> /etc/bash.bashrc
+
+# === C'EST ICI QU'ON DEVIENT L'UTILISATEUR LIMITÉ (TOUT À LA FIN) ===
+USER jenkins
+
+EXPOSE 8080 50000
+
+ENTRYPOINT ["/entrypoint.sh"]
