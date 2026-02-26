@@ -1,0 +1,154 @@
+version: '3.8'
+
+services:
+  # =================================================================
+  # ZONE 0 : RED TEAM (L'ATTAQUANT)
+  # =================================================================
+  kali.attacker:
+    build: ../kali-custom
+    container_name: kali_hard
+    hostname: kali
+    tty: true
+    stdin_open: true
+    privileged: true
+    ports:
+      - "2223:22"  # <--- PORT DIFFÉRENT (2223) pour différencier du Medium
+    networks:
+      net_public_hard:
+        ipv4_address: 172.21.0.10
+    cap_add:
+      - NET_ADMIN  # Nécessaire pour les outils de scan avancés
+
+  # =================================================================
+  # ZONE 1 : DMZ (VISIBLE DEPUIS KALI)
+  # =================================================================
+  target-web:
+    build: ./target-web
+    container_name: target_web_hard
+    hostname: target-web
+    privileged: true
+    restart: always
+    networks:
+      net_public_hard:
+        ipv4_address: 172.21.0.40   # Face Publique
+      net_internal_1_hard:
+        ipv4_address: 172.23.0.10   # Passerelle vers Zone 2
+    cap_add:
+      - NET_ADMIN  # Nécessaire pour le routage/pivot
+
+  target-support:
+    build: ./target-support
+    container_name: target_support_hard
+    hostname: target-support
+    privileged: true
+    restart: always
+    networks:
+      net_public_hard:
+        ipv4_address: 172.21.0.41   # On reprend l'IP de l'ancien Gitea
+    ports:
+      - "8081:80" # Accès Web depuis ton navigateur sur http://localhost:8081
+
+  # =================================================================
+  # ZONE 2 : INTERNE 1 (CACHE DERRIERE WEB)
+  # =================================================================
+  target-db:
+    image: mysql:5.7
+    container_name: target_db_hard
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wp_user
+      MYSQL_PASSWORD: wp_password
+    networks:
+      net_internal_1_hard:
+        ipv4_address: 172.23.0.25 # On lui donne une IP dédiée
+
+  # 2. La Cible : WordPress (Remplace Jenkins)
+  target-wordpress:
+    build: ./target-wordpress
+    container_name: target_wordpress_hard
+    hostname: jack-blog
+    privileged: true     # Nécessaire pour le routing/pivot
+    restart: always
+    depends_on:
+      - target-db
+    networks:
+      # Interface côté Zone 2 (Celle que tu attaques depuis Target-Web)
+      net_internal_1_hard:
+        ipv4_address: 172.23.0.20
+      # Interface côté Zone 3 (Vers le réseau profond)
+      net_internal_2_hard:
+        ipv4_address: 172.25.0.10
+    cap_add:
+      - NET_ADMIN        # Indispensable pour faire du pivot réseau plus tard
+    environment:
+      # Connexion à la DB définie juste au-dessus
+      WORDPRESS_DB_HOST: 172.23.0.25:3306
+      WORDPRESS_DB_USER: wp_user
+      WORDPRESS_DB_PASSWORD: wp_password
+      WORDPRESS_DB_NAME: wordpress
+      # Variable critique pour l'exploit Python (Library Hijacking)
+      PYTHONPATH: /var/www/html/wp-content/uploads
+
+  # Machine 3 : Le Cœur (Spring Boot / Java)
+  target-spring:
+    build: ./target-spring
+    container_name: target_spring_hard
+    restart: always
+    networks:
+      net_internal_1_hard:
+        ipv4_address: 172.23.0.30
+
+  # =================================================================
+  # ZONE 3 : INTERNE 2 (PROFOND - CACHE DERRIERE JENKINS)
+  # =================================================================
+  target-playground:
+    build: ./target-playground
+    container_name: target_playground_hard
+    hostname: playground
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Faille Root critique
+    networks:
+      net_internal_2_hard:
+        ipv4_address: 172.25.0.20
+
+  target-rocket:
+    build: ./target-rocket
+    container_name: target_rocket_hard
+    hostname: rocket
+    privileged: true   # Indispensable pour NFS
+    restart: always
+    networks:
+      net_internal_2_hard:
+        ipv4_address: 172.25.0.30
+    cap_add:
+      - SYS_ADMIN
+      - DAC_READ_SEARCH
+# =================================================================
+# DÉFINITION DES RÉSEAUX (SEGMENTATION)
+# =================================================================
+networks:
+  # Réseau A : DMZ (172.21.x.x)
+  net_public_hard:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+  
+  # Réseau B : Interne 1 (172.23.x.x) - Pas d'accès internet direct
+  net_internal_1_hard:
+    internal: true 
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/24
+
+  # Réseau C : Interne 2 (172.25.x.x) - Totalement isolé
+  net_internal_2_hard:
+    internal: true
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
