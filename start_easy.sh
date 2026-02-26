@@ -24,6 +24,11 @@ else
     AR_MODE="detection"
 fi
 
+echo "[0/4] Arret de l architecture Medium si active..."
+cd ~/Desktop/PER_2025_Labo_Attaque_Defense__/architectures/medium
+sudo docker-compose down 2>/dev/null || true
+sudo docker network disconnect medium_net_private_medium single-node-wazuh.manager-1 2>/dev/null || true
+sudo docker network disconnect medium_net_public_medium single-node-wazuh.manager-1 2>/dev/null || true
 echo "[1/4] Demarrage du Wazuh Manager..."
 cd ~/Desktop/PER_2025_Labo_Attaque_Defense__/wazuh-docker/single-node
 sudo docker-compose up -d
