@@ -7,6 +7,11 @@ if [ ! -z "$WAZUH_MANAGER_IP" ]; then
 fi
 
 # Démarrage de l'agent Wazuh
+sed -i "/</ossec_config>/i \
+  <localfile>\
+    <log_format>syslog</log_format>\
+    <location>/var/log/commands.log</location>\
+  </localfile>" /var/ossec/etc/ossec.conf
 service wazuh-agent start
 
 # Démarrage de SSH (pour que l'étudiant se connecte une fois la clé uploadée)

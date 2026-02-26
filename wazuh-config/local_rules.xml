@@ -131,3 +131,53 @@
   </rule>
 
 </group>
+
+<!-- ================================================= -->
+<!-- SCENARIO MEDIUM : Detection BASH_CMD              -->
+<!-- ================================================= -->
+<group name="medium,privilege_escalation">
+
+  <rule id="110101" level="10">
+    <match>LD_PRELOAD=</match>
+    <description>MEDIUM: LD_PRELOAD detected in command</description>
+    <mitre><id>T1574.006</id></mitre>
+  </rule>
+
+  <rule id="110102" level="14">
+    <if_sid>110101</if_sid>
+    <match>gzip</match>
+    <description>CRITICAL: LD_PRELOAD privilege escalation via sudo gzip</description>
+    <mitre><id>T1574.006</id></mitre>
+  </rule>
+
+  <rule id="110200" level="10">
+    <match>PATH=/tmp</match>
+    <description>MEDIUM: PATH modified to include /tmp (PATH Hijacking attempt)</description>
+    <mitre><id>T1574.007</id></mitre>
+  </rule>
+
+  <rule id="110201" level="14">
+    <match>/usr/bin/sysinfo</match>
+    <description>CRITICAL: Execution of SUID sysinfo binary (PATH Hijacking)</description>
+    <mitre><id>T1574.007</id></mitre>
+  </rule>
+
+  <rule id="110300" level="12">
+    <match>maintenance.sh</match>
+    <description>CRITICAL: Cron script maintenance.sh modified (possible backdoor)</description>
+    <mitre><id>T1053.003</id></mitre>
+  </rule>
+
+  <rule id="110301" level="14">
+    <match>rootbash</match>
+    <description>CRITICAL: SUID rootbash execution detected (cron privilege escalation)</description>
+    <mitre><id>T1053.003</id></mitre>
+  </rule>
+
+  <rule id="110400" level="14">
+    <match>os.setuid(0)</match>
+    <description>CRITICAL: Python capability abuse setuid(0) detected</description>
+    <mitre><id>T1548</id></mitre>
+  </rule>
+
+</group>
